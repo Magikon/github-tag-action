@@ -116,7 +116,7 @@ then
     esac
     tag=$new
   done
-  if with_v
+  if $with_v
   then
     [ -z $prefix ] && old=$(git tag --list --sort=-version:refname "$prefix-v*" | head -n 1) || old=$(git tag --list --sort=-version:refname "v*" | head -n 1)
   else
