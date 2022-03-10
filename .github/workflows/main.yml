@@ -20,4 +20,3 @@ jobs:
         MAJOR: "'BREAKING CHANGE'|*#major*"
         MINOR: "*feat*|*#minor*"
         PATCH: "*fix*|*chore*|*docs*|*update*"
-        FORCE: true
