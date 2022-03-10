@@ -92,8 +92,6 @@ else
 fi
 
 old=$tag
-echo "Last tag is ..."
-echo $old
 
 # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
 if [ -z "$tag" ]
