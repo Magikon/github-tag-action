@@ -117,7 +117,7 @@ fi
 shopt -s extglob;
 if $force
 then
-  IFS=$'\n' read -d '' -a array <<< `git log --pretty=format:"%s" $current_branch --reverse --no-merges`
+  IFS=$'\n' read -d '' -a array <<< $(git log --pretty=format:"%s" $current_branch --reverse --no-merges)
   new=$initial_version
   for i in "${array[@]}"
   do 
@@ -140,6 +140,7 @@ then
     echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0 
   fi
 else
+  log=$(git log --pretty=format:"%s" $current_branch --no-merges | head -n 1)
   case "$log" in
     @($major) ) new=$(semver -i major $tag); part="major";;
     @($minor) ) new=$(semver -i minor $tag); part="minor";;
