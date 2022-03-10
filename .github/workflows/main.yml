@@ -18,7 +18,7 @@ jobs:
         INITIAL_VERSION: 0.0.0
         RELEASE_BRANCHES: master
         TAG_CONTEXT: branch
-        MAJOR: "'BREAKING CHANGE'|*#major*"
+        MAJOR: "BREAKING*CHANGE|*#major*"
         MINOR: "*feat*|*#minor*"
         PATCH: "*fix*|*chore*|*docs*|*update*"
         FORCE: true

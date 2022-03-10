@@ -91,6 +91,10 @@ else
     esac
 fi
 
+old=$tag
+echo "Last tag is ..."
+echo $old
+
 # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
 if [ -z "$tag" ]
 then
@@ -116,12 +120,10 @@ then
     esac
     tag=$new
   done
-  if $with_v
-  then
-    [ -z $prefix ] && old=$(git tag --list --sort=-version:refname "$prefix-v*" | head -n 1) || old=$(git tag --list --sort=-version:refname "v*" | head -n 1)
-  else
-    [ -z $prefix ] && old=$(git tag --list --sort=-version:refname "$prefix-*" | head -n 1) || old=$(git tag --list --sort=-version:refname "*" | head -n 1)
-  fi
+  echo "Last tag is ..."
+  echo $old
+  echo "New tag is ..."
+  echo $new
   if [ "$old" == "$new" ]
   then
     echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0 
