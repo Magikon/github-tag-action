@@ -183,6 +183,8 @@ fi
 echo ::set-output name=new_tag::$new
 echo ::set-output name=part::$part
 
+commit=$(git rev-parse HEAD)
+
 # use dry run to determine the next tag
 if $dryrun
 then
