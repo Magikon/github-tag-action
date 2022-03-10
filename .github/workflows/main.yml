@@ -11,6 +11,15 @@ jobs:
       with:
         fetch-depth: '0'
     - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@master
+      uses: Magikon/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        INITIAL_VERSION: 0.0.0
+        DEFAULT_BUMP: patch
+        RELEASE_BRANCHES: development
+        TAG_CONTEXT: branch
+        PREFIX: ${{ env.IMAGE_TAG }}
+        MAJOR: "'BREAKING CHANGE'|*#major*"
+        MINOR: "*feat*|*#minor*"
+        PATCH: "*fix*|*chore*|*docs*|*update*"

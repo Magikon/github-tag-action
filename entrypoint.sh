@@ -3,16 +3,21 @@
 set -o pipefail
 
 # config
-default_semvar_bump=${DEFAULT_BUMP:-minor}
+default_semvar_bump=${DEFAULT_BUMP:-""}
 with_v=${WITH_V:-false}
 release_branches=${RELEASE_BRANCHES:-master,main}
 custom_tag=${CUSTOM_TAG}
+prefix=${PREFIX:-""}
 source=${SOURCE:-.}
 dryrun=${DRY_RUN:-false}
 initial_version=${INITIAL_VERSION:-0.0.0}
 tag_context=${TAG_CONTEXT:-repo}
-suffix=${PRERELEASE_SUFFIX:-beta}
+suffix=${PRERELEASE_SUFFIX:-prerelease}
 verbose=${VERBOSE:-true}
+major=${MAJOR:-#major}
+minor=${MINOR:-#minor}
+patch=${PATCH:-#patch}
+force=${FORCE:-false}
 
 cd ${GITHUB_WORKSPACE}/${source}
 
@@ -21,12 +26,18 @@ echo -e "\tDEFAULT_BUMP: ${default_semvar_bump}"
 echo -e "\tWITH_V: ${with_v}"
 echo -e "\tRELEASE_BRANCHES: ${release_branches}"
 echo -e "\tCUSTOM_TAG: ${custom_tag}"
+echo -e "\tPREFIX: ${prefix}"
 echo -e "\tSOURCE: ${source}"
 echo -e "\tDRY_RUN: ${dryrun}"
 echo -e "\tINITIAL_VERSION: ${initial_version}"
 echo -e "\tTAG_CONTEXT: ${tag_context}"
 echo -e "\tPRERELEASE_SUFFIX: ${suffix}"
 echo -e "\tVERBOSE: ${verbose}"
+echo -e "\tMAJOR: ${major}"
+echo -e "\tMINOR: ${minor}"
+echo -e "\tPATCH: ${patch}"
+echo -e "\tFORCE: ${force}"
+
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
@@ -47,25 +58,40 @@ git fetch --tags
 tagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+$" 
 preTagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix\.[0-9]+)?$" 
 
+if [ -z "$prefix" ]
+then
 # get latest tag that looks like a semver (with or without v)
-case "$tag_context" in
-    *repo*) 
-        taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt")"
-        tag="$(semver $taglist | tail -n 1)"
-
-        pre_taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt")"
-        pre_tag="$(semver "$pre_taglist" | tail -n 1)"
-        ;;
-    *branch*) 
-        taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt")"
-        tag="$(semver $taglist | tail -n 1)"
-
-        pre_taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$preTagFmt")"
-        pre_tag=$(semver "$pre_taglist" | tail -n 1)
-        ;;
-    * ) echo "Unrecognised context"; exit 1;;
-esac
-
+    case "$tag_context" in
+        *repo*) 
+            taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt")"
+			[ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+    
+            pre_taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt")"
+            [ -z "$pre_taglist" ] || pre_tag="$(semver "$pre_taglist" | tail -n 1)"
+            ;;
+        *branch*) 
+            taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt")"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+    
+            pre_taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$preTagFmt")"
+            [ -z "$pre_taglist" ] || pre_tag=$(semver "$pre_taglist" | tail -n 1)
+            ;;
+        * ) echo "Unrecognised context"; exit 1;;
+    esac
+else
+# get latest tag that looks like a semver (with or without v)
+    case "$tag_context" in
+        *repo*)
+            taglist="$(git for-each-ref --format '%(refname:lstrip=2)' --sort=-v:refname | grep $prefix- | sed -e "s/^$prefix-//" | grep -E "$tagFmt")"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+            ;;            
+        *branch*)         
+            taglist="$(git tag --list --merged HEAD --sort=-v:refname $prefix* | sed -e "s/^$prefix-//" | grep -E "$tagFmt")"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+            ;;
+        * ) echo "Unrecognised context"; exit 1;;
+    esac
+fi
 
 # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
 if [ -z "$tag" ]
@@ -98,20 +124,40 @@ then
   echo $log
 fi
 
+shopt -s extglob;
 case "$log" in
-    *#major* ) new=$(semver -i major $tag); part="major";;
-    *#minor* ) new=$(semver -i minor $tag); part="minor";;
-    *#patch* ) new=$(semver -i patch $tag); part="patch";;
-    *#none* ) 
-        echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0;;
+    @($major) ) new=$(semver -i major $tag); part="major";;
+    @($minor) ) new=$(semver -i minor $tag); part="minor";;
+    @($patch) ) new=$(semver -i patch $tag); part="patch";;
     * ) 
-        if [ "$default_semvar_bump" == "none" ]; then
+        if [ -z "$default_semvar_bump" ]; then
             echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0 
         else 
             new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump 
         fi 
         ;;
 esac
+shopt -u extglob;
+
+if $force
+then
+  IFS=$'\n' read -d '' -a array <<< `git log --pretty=format:"%s" $current_branch --reverse --no-merges`
+  new=$initial_version
+  tag=$initial_version
+  shopt -s extglob;
+  for i in "${array[@]}"
+  do 
+    case "$i" in
+      @($major) ) new=$(semver -i major $tag) ;;
+      @($minor) ) new=$(semver -i minor $tag) ;;
+      @($patch) ) new=$(semver -i patch $tag) ;;
+      * ) [ -z "$default_semvar_bump" ] || new=$(semver -i "${default_semvar_bump}" $tag) ;;
+    esac
+    tag=$new
+  done
+  shopt -u extglob;
+fi
+
 
 if $pre_release
 then
@@ -134,6 +180,11 @@ fi
 if [ ! -z $custom_tag ]
 then
     new="$custom_tag"
+fi
+
+if [ ! -z $prefix ]
+then
+    new="$prefix-$new"
 fi
 
 if $pre_release
