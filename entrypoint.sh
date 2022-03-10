@@ -13,7 +13,6 @@ dryrun=${DRY_RUN:-false}
 initial_version=${INITIAL_VERSION:-0.0.0}
 tag_context=${TAG_CONTEXT:-repo}
 suffix=${PRERELEASE_SUFFIX:-prerelease}
-verbose=${VERBOSE:-true}
 major=${MAJOR:-#major}
 minor=${MINOR:-#minor}
 patch=${PATCH:-#patch}
@@ -32,7 +31,6 @@ echo -e "\tDRY_RUN: ${dryrun}"
 echo -e "\tINITIAL_VERSION: ${initial_version}"
 echo -e "\tTAG_CONTEXT: ${tag_context}"
 echo -e "\tPRERELEASE_SUFFIX: ${suffix}"
-echo -e "\tVERBOSE: ${verbose}"
 echo -e "\tMAJOR: ${major}"
 echo -e "\tMINOR: ${minor}"
 echo -e "\tPATCH: ${patch}"
@@ -96,14 +94,11 @@ fi
 # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
 if [ -z "$tag" ]
 then
-    log=$(git log --pretty='%B')
     tag="$initial_version"
     if [ -z "$pre_tag" ] && $pre_release
     then
       pre_tag="$initial_version"
     fi
-else
-    log=$(git log $tag..HEAD --pretty='%B')
 fi
 
 # get current commit hash for tag
@@ -118,33 +113,12 @@ if [ "$tag_commit" == "$commit" ]; then
     exit 0
 fi
 
-# echo log if verbose is wanted
-if $verbose
-then
-  echo $log
-fi
 
 shopt -s extglob;
-case "$log" in
-    @($major) ) new=$(semver -i major $tag); part="major";;
-    @($minor) ) new=$(semver -i minor $tag); part="minor";;
-    @($patch) ) new=$(semver -i patch $tag); part="patch";;
-    * ) 
-        if [ -z "$default_semvar_bump" ]; then
-            echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0 
-        else 
-            new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump 
-        fi 
-        ;;
-esac
-shopt -u extglob;
-
 if $force
 then
   IFS=$'\n' read -d '' -a array <<< `git log --pretty=format:"%s" $current_branch --reverse --no-merges`
   new=$initial_version
-  tag=$initial_version
-  shopt -s extglob;
   for i in "${array[@]}"
   do 
     case "$i" in
@@ -155,8 +129,31 @@ then
     esac
     tag=$new
   done
-  shopt -u extglob;
+  if with_v
+  then
+    [ -z $prefix ] && old=$(git tag --list --sort=-version:refname "$prefix-v*" | head -n 1) || old=$(git tag --list --sort=-version:refname "v*" | head -n 1)
+  else
+    [ -z $prefix ] && old=$(git tag --list --sort=-version:refname "$prefix-*" | head -n 1) || old=$(git tag --list --sort=-version:refname "*" | head -n 1)
+  fi
+  if [ "$old" == "$new" ]
+  then
+    echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0 
+  fi
+else
+  case "$log" in
+    @($major) ) new=$(semver -i major $tag); part="major";;
+    @($minor) ) new=$(semver -i minor $tag); part="minor";;
+    @($patch) ) new=$(semver -i patch $tag); part="patch";;
+    * ) 
+        if [ -z "$default_semvar_bump" ]; then
+            echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0 
+        else 
+            new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump 
+        fi 
+        ;;
+  esac
 fi
+shopt -u extglob;
 
 
 if $pre_release
