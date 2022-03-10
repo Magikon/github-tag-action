@@ -15,7 +15,6 @@ jobs:
       uses: Catena-Technology/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
         INITIAL_VERSION: 0.0.0
         RELEASE_BRANCHES: master
         TAG_CONTEXT: branch
