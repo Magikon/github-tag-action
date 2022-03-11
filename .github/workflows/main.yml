@@ -12,7 +12,7 @@ jobs:
         fetch-depth: '0'
         
     - name: Bump version and push tag
-      uses: Catena-Technology/github-tag-action@master
+      uses: Magikon/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         INITIAL_VERSION: 0.0.0

@@ -85,6 +85,7 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 ### Credits
 
 [fsaintjacques/semver-tool](https://github.com/fsaintjacques/semver-tool)
+[anothrNick/github-tag-action](https://github.com/anothrNick/github-tag-action)
 
 
 
