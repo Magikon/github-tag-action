@@ -156,6 +156,8 @@ fi
 
 echo $part
 
+echo ::set-output name=tag::$new
+
 # prefix with 'v'
 if $with_v
 then
@@ -191,8 +193,6 @@ then
     echo ::set-output name=tag::$tag
     exit 0
 fi 
-
-echo ::set-output name=tag::$new
 
 # create local git tag
 git tag $new

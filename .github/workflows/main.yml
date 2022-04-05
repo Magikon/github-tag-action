@@ -12,6 +12,7 @@ jobs:
         fetch-depth: '0'
         
     - name: Bump version and push tag
+      id: tag
       uses: Magikon/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -22,3 +23,13 @@ jobs:
         MINOR: "*feat*|*#minor*"
         PATCH: "*fix*|*chore*|*docs*|*update*"
         FORCE: true
+        
+    - name: Echo variables
+      env:
+        NEW_TAG: ${{ steps.tag.outputs.new_tag }}
+        SEL_TAG: ${{ steps.tag.outputs.tag }}
+      run: |
+        echo "tag with all includes"
+        echo $NEW_TAG
+        echo "only tag"
+        echo $SEL_TAG
