@@ -195,8 +195,8 @@ then
 fi
 
 # create local git tag
-echo "tagging commit"
-git tag -fa $new $commit
+echo "tagging local"
+git tag -f $new
 git describe --tags
 # git tag $new
 echo "push tag to remote"
