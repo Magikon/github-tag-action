@@ -195,8 +195,14 @@ then
 fi
 
 # create local git tag
-git tag $new
+git tag -fa $new $commit
+# git tag $new
 
-git push origin $new
+git push -f origin :refs/tags/$new
 
-echo $?
+if [ "$?" -eq "0" ]; then
+  exit 0
+else
+  echo "::error::Tag was not created properly."
+  exit 1
+fi
