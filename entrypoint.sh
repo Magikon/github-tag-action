@@ -195,9 +195,9 @@ then
 fi
 
 # create local git tag
-echo "tagging local"
-git tag -f $new
-git describe --tags
+# echo "tagging local"
+# git tag -f $new
+# git describe --tags
 # git tag $new
 echo "push tag to remote"
 git push -f origin :refs/tags/$new
