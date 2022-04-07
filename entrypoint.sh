@@ -62,7 +62,7 @@ then
     case "$tag_context" in
         *repo*)
             taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt")"
-			[ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
 
             pre_taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt")"
             [ -z "$pre_taglist" ] || pre_tag="$(semver "$pre_taglist" | tail -n 1)"
@@ -161,12 +161,7 @@ echo ::set-output name=tag::$new
 # prefix with 'v'
 if $with_v
 then
-	new="v$new"
-fi
-
-if [ ! -z $custom_tag ]
-then
-    new="$custom_tag"
+    new="v$new"
 fi
 
 if [ ! -z $prefix ]
@@ -179,6 +174,11 @@ then
     echo -e "Bumping tag ${pre_tag}. \n\tNew tag ${new}"
 else
     echo -e "Bumping tag ${tag}. \n\tNew tag ${new}"
+fi
+
+if [ ! -z $custom_tag ]
+then
+    new="$custom_tag"
 fi
 
 # set outputs
@@ -204,6 +204,7 @@ git push -f origin $new
 
 echo "cheking"
 if [ "$?" -eq "0" ]; then
+  echo "task completed"
   exit 0
 else
   echo "::error::Tag was not created properly."
