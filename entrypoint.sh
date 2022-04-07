@@ -56,135 +56,131 @@ git fetch --tags
 tagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+$"
 preTagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix\.[0-9]+)?$"
 
-if [ -z "$custom_tag"]
+if [ -z "$prefix" ]
 then
-  if [ -z "$prefix" ]
-  then
-  # get latest tag that looks like a semver (with or without v)
-      case "$tag_context" in
-          *repo*)
-              taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt")"
-  			[ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
-  
-              pre_taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt")"
-              [ -z "$pre_taglist" ] || pre_tag="$(semver "$pre_taglist" | tail -n 1)"
-              ;;
-          *branch*)
-              taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt")"
-              [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
-  
-              pre_taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$preTagFmt")"
-              [ -z "$pre_taglist" ] || pre_tag=$(semver "$pre_taglist" | tail -n 1)
-              ;;
-          * ) echo "Unrecognised context"; exit 1;;
-      esac
-  else
-  # get latest tag that looks like a semver (with or without v)
-      case "$tag_context" in
-          *repo*)
-              taglist="$(git for-each-ref --format '%(refname:lstrip=2)' --sort=-v:refname | grep $prefix- | sed -e "s/^$prefix-//" | grep -E "$tagFmt")"
-              [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
-              ;;
-          *branch*)
-              taglist="$(git tag --list --merged HEAD --sort=-v:refname $prefix* | sed -e "s/^$prefix-//" | grep -E "$tagFmt")"
-              [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
-              ;;
-          * ) echo "Unrecognised context"; exit 1;;
-      esac
-  fi
-  
-  old=$tag
-  
-  # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
-  if [ -z "$tag" ]
-  then
-      tag="$initial_version"
-      if [ -z "$pre_tag" ] && $pre_release
-      then
-        pre_tag="$initial_version"
-      fi
-  fi
-  
-  shopt -s extglob;
-  if $force
-  then
-    IFS=$'\n' read -d '' -a array <<< $(git log --pretty=format:"%s" $current_branch --reverse --no-merges)
-    new=$initial_version
-    for i in "${array[@]}"
-    do
-      case "$i" in
-        @($major) ) new=$(semver -i major $tag); part="major" ;;
-        @($minor) ) new=$(semver -i minor $tag); part="minor" ;;
-        @($patch) ) new=$(semver -i patch $tag); part="patch" ;;
-        * ) [ -z "$default_semvar_bump" ] || new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump ;;
-      esac
-      tag=$new
-    done
-    echo "Last tag is ..."
-    echo $old
-    echo "New tag is ..."
-    echo $new
-    if [ "$old" == "$new" ]
-    then
-      echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
-    fi
-  else
-    log=$(git log --pretty=format:"%s" $current_branch --no-merges | head -n 1)
-    case "$log" in
-      @($major) ) new=$(semver -i major $tag); part="major";;
-      @($minor) ) new=$(semver -i minor $tag); part="minor";;
-      @($patch) ) new=$(semver -i patch $tag); part="patch";;
-      * )
-          if [ -z "$default_semvar_bump" ]; then
-              echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
-          else
-              new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump
-          fi
-          ;;
+# get latest tag that looks like a semver (with or without v)
+    case "$tag_context" in
+        *repo*)
+            taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt")"
+			[ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+
+            pre_taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt")"
+            [ -z "$pre_taglist" ] || pre_tag="$(semver "$pre_taglist" | tail -n 1)"
+            ;;
+        *branch*)
+            taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt")"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+
+            pre_taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$preTagFmt")"
+            [ -z "$pre_taglist" ] || pre_tag=$(semver "$pre_taglist" | tail -n 1)
+            ;;
+        * ) echo "Unrecognised context"; exit 1;;
     esac
-  fi
-  shopt -u extglob;
-  
-  
-  if $pre_release
+else
+# get latest tag that looks like a semver (with or without v)
+    case "$tag_context" in
+        *repo*)
+            taglist="$(git for-each-ref --format '%(refname:lstrip=2)' --sort=-v:refname | grep $prefix- | sed -e "s/^$prefix-//" | grep -E "$tagFmt")"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+            ;;
+        *branch*)
+            taglist="$(git tag --list --merged HEAD --sort=-v:refname $prefix* | sed -e "s/^$prefix-//" | grep -E "$tagFmt")"
+            [ -z "$taglist" ] || tag="$(semver $taglist | tail -n 1)"
+            ;;
+        * ) echo "Unrecognised context"; exit 1;;
+    esac
+fi
+
+old=$tag
+
+# if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
+if [ -z "$tag" ]
+then
+    tag="$initial_version"
+    if [ -z "$pre_tag" ] && $pre_release
+    then
+      pre_tag="$initial_version"
+    fi
+fi
+
+shopt -s extglob;
+if $force
+then
+  IFS=$'\n' read -d '' -a array <<< $(git log --pretty=format:"%s" $current_branch --reverse --no-merges)
+  new=$initial_version
+  for i in "${array[@]}"
+  do
+    case "$i" in
+      @($major) ) new=$(semver -i major $tag); part="major" ;;
+      @($minor) ) new=$(semver -i minor $tag); part="minor" ;;
+      @($patch) ) new=$(semver -i patch $tag); part="patch" ;;
+      * ) [ -z "$default_semvar_bump" ] || new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump ;;
+    esac
+    tag=$new
+  done
+  echo "Last tag is ..."
+  echo $old
+  echo "New tag is ..."
+  echo $new
+  if [ "$old" == "$new" ]
   then
-      # Already a prerelease available, bump it
-      if [[ "$pre_tag" == *"$new"* ]]; then
-          new=$(semver -i prerelease $pre_tag --preid $suffix); part="pre-$part"
-      else
-          new="$new-$suffix.1"; part="pre-$part"
-      fi
-  fi
-  
-  echo $part
-  
-  echo ::set-output name=tag::$new
-  
-  # prefix with 'v'
-  if $with_v
-  then
-  	new="v$new"
-  fi
-  
-  if [ ! -z $custom_tag ]
-  then
-      new="$custom_tag"
-  fi
-  
-  if [ ! -z $prefix ]
-  then
-      new="$prefix-$new"
-  fi
-  
-  if $pre_release
-  then
-      echo -e "Bumping tag ${pre_tag}. \n\tNew tag ${new}"
-  else
-      echo -e "Bumping tag ${tag}. \n\tNew tag ${new}"
+    echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
   fi
 else
-  new="$custom_tag"
+  log=$(git log --pretty=format:"%s" $current_branch --no-merges | head -n 1)
+  case "$log" in
+    @($major) ) new=$(semver -i major $tag); part="major";;
+    @($minor) ) new=$(semver -i minor $tag); part="minor";;
+    @($patch) ) new=$(semver -i patch $tag); part="patch";;
+    * )
+        if [ -z "$default_semvar_bump" ] && [ -z "$custom_tag"]; then
+            echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
+        else
+            new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump
+        fi
+        ;;
+  esac
 fi
+shopt -u extglob;
+
+
+if $pre_release
+then
+    # Already a prerelease available, bump it
+    if [[ "$pre_tag" == *"$new"* ]]; then
+        new=$(semver -i prerelease $pre_tag --preid $suffix); part="pre-$part"
+    else
+        new="$new-$suffix.1"; part="pre-$part"
+    fi
+fi
+
+echo $part
+
+echo ::set-output name=tag::$new
+
+# prefix with 'v'
+if $with_v
+then
+	new="v$new"
+fi
+
+if [ ! -z $custom_tag ]
+then
+    new="$custom_tag"
+fi
+
+if [ ! -z $prefix ]
+then
+    new="$prefix-$new"
+fi
+
+if $pre_release
+then
+    echo -e "Bumping tag ${pre_tag}. \n\tNew tag ${new}"
+else
+    echo -e "Bumping tag ${tag}. \n\tNew tag ${new}"
+fi
+
 # set outputs
 echo ::set-output name=new_tag::$new
 echo ::set-output name=part::$part
