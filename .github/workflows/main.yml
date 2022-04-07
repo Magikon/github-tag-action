@@ -16,13 +16,7 @@ jobs:
       uses: Magikon/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        INITIAL_VERSION: 0.0.0
-        RELEASE_BRANCHES: master
-        TAG_CONTEXT: branch
-        MAJOR: "BREAKING*CHANGE|*#major*"
-        MINOR: "*feat*|*#minor*"
-        PATCH: "*fix*|*chore*|*docs*|*update*"
-        FORCE: true
+        CUSTOM_TAG: 4.1.3
         
     - name: Echo variables
       env:
