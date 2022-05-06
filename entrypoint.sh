@@ -38,7 +38,6 @@ echo -e "\tPATCH: ${patch}"
 echo -e "\tFORCE: ${force}"
 echo -e "\tOVERWRITE: ${overwrite}"
 
-
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 pre_release="true"
