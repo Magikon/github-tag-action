@@ -93,6 +93,25 @@ fi
 
 old=$tag
 
+# save in 'oldtaghash' old tag commit hash
+if [ -z "$prefix" ]
+then
+  [ $with_v ] && oldtaghash=$(git rev-list -n 1 v$tag) || oldtaghash=$(git rev-list -n 1 $tag)
+else
+  [ $with_v ] && oldtaghash=$(git rev-list -n 1 $prefix-v$tag) || oldtaghash=$(git rev-list -n 1 $prefix-$tag)
+fi
+
+echo ::set-output name=oldhash::$oldtaghash
+
+commit=$(git rev-parse HEAD)
+
+echo ::set-output name=newhash::$commit
+
+echo "Printing old tag hash"
+echo $oldtaghash
+echo "Print new hash"
+echo $commit
+
 # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
 if [ -z "$tag" ]
 then

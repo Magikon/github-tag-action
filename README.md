@@ -27,9 +27,16 @@ jobs:
         fetch-depth: '0'
     - name: Bump version and push tag
       uses: Magikon/github-tag-action@v4.0.5
+      id: tag
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
+        INITIAL_VERSION: 0.0.0
+        RELEASE_BRANCHES: development
+        TAG_CONTEXT: branch
+        PREFIX: dev
+        MAJOR: "BREAKING*CHANGE|*#major*"
+        MINOR: "*feat*|*#minor*"
+        PATCH: "*fix*|*chore*|*docs*|*update*|#patch"
+        FORCE: true
 ```
 
 _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all commits to look for the semver commit message._
@@ -38,7 +45,6 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 
 **Environment Variables**
 
-- **GITHUB_TOKEN** **_(required)_** - Required for permission to tag the repo.
 - **DEFAULT_BUMP** _(optional)_ - Which type of bump to use when none explicitly provided (default: `minor`).
 - **WITH_V** _(optional)_ - Tag version with `v` character.
 - **RELEASE_BRANCHES** _(optional)_ - Comma separated list of branches (bash reg exp accepted) that will generate the release tags. Other branches and pull-requests generate versions postfixed with the commit hash and do not generate any tag. Examples: `master` or `.*` or `release.*,hotfix.*,master` ...
@@ -59,7 +65,23 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 - **new_tag** - The value of the newly created tag.
 - **tag** - The value of the latest tag after running this action.
 - **part** - The part of version which was bumped.
+- **oldhash** - Print last tag commit SHA
+- **newhash** - Print current tag commit SHA
 
+With oldhash and newhash you can find out if the content of the folder has changed during the last tag and new tag or not.
+```- name: Get changed files in apps/auth/src/migrations/ folder
+     id: changed-files-auth
+     run: |
+       test=$(git diff ${{ steps.tag.outputs.oldhash }} ${{ steps.tag.outputs.newhash }} --stat -- apps/auth/src/migrations/ | wc -l)
+       (( $test )) && echo "::set-output name=any_changed::true || echo "::set-output name=any_changed::false
+       echo "If there are changes in the folder, then the test variable is greater than zero. Current test=$test"
+
+  - name: Run a step if any files have changed in the apps/auth/src/migrations/ folder
+    if: ${{ contains(steps.changed-files-auth.outputs.any_changed, 'true') }}
+    id: auth-migration-run
+      run: |
+        ....
+```
 > **_Note:_** This action creates a [lightweight tag](https://developer.github.com/v3/git/refs/#create-a-reference).
 
 ### Bumping
