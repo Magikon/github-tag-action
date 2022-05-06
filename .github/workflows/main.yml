@@ -30,9 +30,9 @@ jobs:
         SEL_TAG: ${{ steps.tag.outputs.tag }}
         PART: ${{ steps.tag.outputs.part }}
       run: |
-        echo "tag with all includes"
+        echo "New Tag"
         echo $NEW_TAG
-        echo "only tag"
+        echo "Tag"
         echo $SEL_TAG
-        echo "part"
+        echo "Part"
         echo $PART
