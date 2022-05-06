@@ -70,6 +70,7 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 
 With oldhash and newhash you can find out if the content of the folder has changed during the last tag and new tag or not.
 ```Dockerfile
+
   - name: Get changed files in apps/auth/src/migrations/ folder
      id: changed-files-auth
      run: |
