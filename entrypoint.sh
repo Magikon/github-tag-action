@@ -17,6 +17,7 @@ major=${MAJOR:-#major}
 minor=${MINOR:-#minor}
 patch=${PATCH:-#patch}
 force=${FORCE:-false}
+overwrite=${OVERWRITE:-false}
 
 cd ${GITHUB_WORKSPACE}/${source}
 
@@ -35,6 +36,7 @@ echo -e "\tMAJOR: ${major}"
 echo -e "\tMINOR: ${minor}"
 echo -e "\tPATCH: ${patch}"
 echo -e "\tFORCE: ${force}"
+echo -e "\tOVERWRITE: ${overwrite}"
 
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -143,7 +145,8 @@ then
   echo $new
   if [ "$old" == "$new" ]
   then
-    echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
+    echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; 
+	[ $overwrite ] || exit 0
   fi
 else
   log=$(git log --pretty=format:"%s" $current_branch --no-merges | head -n 1)
@@ -153,7 +156,8 @@ else
     @($patch) ) new=$(semver -i patch $tag); part="patch";;
     * )
         if [ -z "$default_semvar_bump" ] && [ -z "$custom_tag"]; then
-            echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
+            echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; 
+			[ $overwrite ] || exit 0
         else
             new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump
         fi

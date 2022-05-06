@@ -15,7 +15,6 @@ jobs:
       id: tag
       uses: Magikon/github-tag-action@master
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         INITIAL_VERSION: 0.0.0
         RELEASE_BRANCHES: master
         TAG_CONTEXT: branch
@@ -23,6 +22,7 @@ jobs:
         MINOR: "*feat*|*#minor*"
         PATCH: "*fix*|*chore*|*docs*|*update*"
         FORCE: true
+        OVERWRITE: true
         
     - name: Echo variables
       env:

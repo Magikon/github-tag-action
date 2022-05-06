@@ -37,6 +37,7 @@ jobs:
         MINOR: "*feat*|*#minor*"
         PATCH: "*fix*|*chore*|*docs*|*update*|#patch"
         FORCE: true
+        OVERWRITE: true
 ```
 
 _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all commits to look for the semver commit message._
@@ -59,6 +60,7 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 - **MINOR** _(optional) - Minor changes from commits ex. `"*feat*|*#minor*"`
 - **PATCH** _(optional) - Patch changes from commits ex. `"*fix*|*chore*|*docs*|*update*"`
 - **PREFIX** _(optional) - ex. `dev-v0.2.4`
+- **OVERWRITE** _(optional) - overwrite tag with this commit. Default `false`
 
 #### Outputs
 
