@@ -1,6 +1,6 @@
 # github-tag-action
 
-A Github Action to automatically bump and tag master, on merge, with the latest SemVer formatted version.
+A Github Action to automatically bump and tag master, on merge, with the latest SemVer formatted version. Can also calculate the tag from the commit logs
 
 [![Build Status](https://github.com/Magikon/github-tag-action/workflows/Bump%20version/badge.svg)](https://github.com/Magikon/github-tag-action/workflows/Bump%20version/badge.svg)
 [![Stable Version](https://img.shields.io/github/v/tag/Magikon/github-tag-action)](https://img.shields.io/github/v/tag/Magikon/github-tag-action)
@@ -26,7 +26,7 @@ jobs:
       with:
         fetch-depth: '0'
     - name: Bump version and push tag
-      uses: Magikon/github-tag-action@v4.0.5
+      uses: Magikon/github-tag-action@v5.0.0
       id: tag
       env:
         INITIAL_VERSION: 0.0.0
@@ -55,12 +55,12 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 - **INITIAL_VERSION** _(optional)_ - Set initial version before bump. Default `0.0.0`.
 - **TAG_CONTEXT** _(optional)_ - Set the context of the previous tag. Possible values are `repo` (default) or `branch`.
 - **PRERELEASE_SUFFIX** _(optional)_ - Suffix for your prerelease versions, `beta` by default. Note this will only be used if a prerelease branch.
-- **FORCE** _(optional)_ - forces to read the tag according to the text from the commits. Possible values are `true` (default) and `false`.
-- **MAJOR** _(optional) - Major changes from commits ex. `"BREAKING*CHANGE|*#major*"`
-- **MINOR** _(optional) - Minor changes from commits ex. `"*feat*|*#minor*"`
-- **PATCH** _(optional) - Patch changes from commits ex. `"*fix*|*chore*|*docs*|*update*"`
-- **PREFIX** _(optional) - ex. `dev-v0.2.4`
-- **OVERWRITE** _(optional) - overwrite tag with this commit. Default `false`
+- **FORCE** _(optional)_ - forces to read the tag according to the text from the commits. Possible values are `true` and (default) `false`.
+- **MAJOR** _(optional)_ - Major changes from commits ex. `"BREAKING*CHANGE|*#major*"`
+- **MINOR** _(optional)_ - Minor changes from commits ex. `"*feat*|*#minor*"`
+- **PATCH** _(optional)- - Patch changes from commits ex. `"*fix*|*chore*|*docs*|*update*"`
+- **PREFIX** _(optional)_ - ex. `dev-v0.2.4`
+- **OVERWRITE** _(optional)_ - overwrite tag with this commit. Default `false`
 
 #### Outputs
 
@@ -72,7 +72,6 @@ _NOTE: set the fetch-depth for `actions/checkout@v2` to be sure you retrieve all
 
 With oldhash and newhash you can find out if the content of the folder has changed during the last tag and new tag or not.
 ```Dockerfile
-#Example
   - name: Get changed files in apps/auth/src/migrations/ folder
      id: changed-files-auth
      run: |
@@ -84,7 +83,7 @@ With oldhash and newhash you can find out if the content of the folder has chang
     if: ${{ contains(steps.changed-files-auth.outputs.any_changed, 'true') }}
     id: auth-migration-run
       run: |
-        ....
+        ...
 ```
 > **_Note:_** This action creates a [lightweight tag](https://developer.github.com/v3/git/refs/#create-a-reference).
 
